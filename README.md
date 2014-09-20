@@ -1,6 +1,6 @@
 # Rist
 
-TODO: Write a gem description
+Rist (Ruby Intelligent System Tools) is a tool set to build Intelligent System.
 
 ## Installation
 
@@ -20,11 +20,21 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Transcriber
+
+Transcriber captures audio using OpenAL and turns the audio into text using Pocketsphinx.
+
+```ruby
+transcriber = Rist::Transcriber.new logfn: "/dev/null"
+
+transcriber.transcribe do |utterance|
+  puts utterance
+end
+```
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/rist/fork )
+1. Fork it ( https://github.com/siegfried/rist/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
