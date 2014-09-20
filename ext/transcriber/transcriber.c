@@ -140,6 +140,6 @@ void Init_transcriber() {
     rb_mRist = rb_define_module("Rist");
     rb_cTranscriber = rb_define_class_under(rb_mRist, "Transcriber", rb_cObject);
     rb_define_alloc_func(rb_cTranscriber, transcriber_allocate);
-    rb_define_method(rb_cTranscriber, "initialize_pocketsphinx", transcriber_initialize_pocketsphinx, 1);
+    rb_define_private_method(rb_cTranscriber, "initialize_pocketsphinx", transcriber_initialize_pocketsphinx, 1);
     rb_define_method(rb_cTranscriber, "transcribe", transcriber_transcribe, 0);
 }
