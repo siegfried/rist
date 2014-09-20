@@ -74,6 +74,13 @@ static int32 al_read(ALCdevice * device, int16 * buffer, int32 max) {
     return number;
 }
 
+/* Transcribe speech continuously.
+ *
+ * for block { |utterance| ... }
+ * @yield [utterance] do whatever you want to do with the utterance transcribed
+ *
+ * @yieldparam [String] utterance the utterance transcribed
+ */
 static VALUE transcriber_transcribe(VALUE self)
 {
     ALCdevice * device;

@@ -4,6 +4,8 @@ Rist (Ruby Intelligent System Tools) is a tool set to build Intelligent System.
 
 ## Installation
 
+*Warning: OpenAL and Pocketsphinx (> 0.8) are prerequisite.*
+
 Add this line to your application's Gemfile:
 
 ```ruby
@@ -22,7 +24,7 @@ Or install it yourself as:
 
 ### Transcriber
 
-Transcriber captures audio using OpenAL and turns the audio into text using Pocketsphinx.
+Transcriber captures audio using OpenAL and turns the audio into text using [Pocketsphinx](http://cmusphinx.sourceforge.net/).
 
 ```ruby
 transcriber = Rist::Transcriber.new logfn: "/dev/null"
