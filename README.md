@@ -1,6 +1,7 @@
 # Rist
 
 [![Gem Version](https://badge.fury.io/rb/rist.svg)](http://badge.fury.io/rb/rist)
+[![Inline docs](http://inch-ci.org/github/siegfried/rist.svg?branch=master)](http://inch-ci.org/github/siegfried/rist)
 
 Rist (Ruby Intelligent System Tools) is a tool set to build Intelligent System.
 
