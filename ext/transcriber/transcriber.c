@@ -21,7 +21,8 @@ static VALUE rb_mRist,
              rb_cTranscriber;
 
 static void transcriber_deallocate(Transcriber * transcriber) {
-    ps_free(transcriber -> decoder);
+    if (transcriber -> decoder)
+        ps_free(transcriber -> decoder);
     xfree(transcriber);
 }
 
