@@ -1,5 +1,7 @@
 # Rist
 
+[![Gem Version](https://badge.fury.io/rb/rist.svg)](http://badge.fury.io/rb/rist)
+
 Rist (Ruby Intelligent System Tools) is a tool set to build Intelligent System.
 
 ## Installation
