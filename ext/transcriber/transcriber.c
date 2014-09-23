@@ -1,7 +1,13 @@
 #include <ruby.h>
+#include <pocketsphinx.h>
+
+#ifdef HAVE_FRAMEWORK_OPENAL
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <pocketsphinx.h>
+#endif
 
 static const arg_t cont_args_def[] = {
     POCKETSPHINX_OPTIONS,
