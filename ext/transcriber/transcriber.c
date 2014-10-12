@@ -1,13 +1,6 @@
 #include <ruby.h>
 #include <pocketsphinx.h>
-
-#ifdef HAVE_FRAMEWORK_OPENAL
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>
-#endif
+#include <sphinxbase/ad.h>
 
 static const arg_t cont_args_def[] = {
     POCKETSPHINX_OPTIONS,
@@ -64,21 +57,9 @@ static VALUE transcriber_initialize_pocketsphinx(VALUE self, VALUE arguments) {
     return self;
 }
 
-static void close_raise(ALCdevice * device, VALUE error, const char * message) {
-    alcCaptureCloseDevice(device);
+static void close_and_raise(ad_rec_t * ad, VALUE error, const char * message) {
+    ad_close(ad);
     rb_raise(error, "%s\n", message);
-}
-
-static int32 al_read(ALCdevice * device, int16 * buffer, int32 max) {
-    ALCint number;
-
-    alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, sizeof(number), &number);
-    if (number >= 0) {
-        number = (number < max ? number : max);
-        alcCaptureSamples(device, buffer, number);
-    }
-
-    return number;
 }
 
 /* Transcribe speech continuously.
@@ -88,46 +69,45 @@ static int32 al_read(ALCdevice * device, int16 * buffer, int32 max) {
  *
  * @yieldparam [String] utterance the utterance transcribed
  */
-static VALUE transcriber_transcribe(VALUE self)
-{
-    ALCdevice * device;
-    ALCuint frequency;
+static VALUE transcriber_transcribe(VALUE self) {
     Transcriber * transcriber;
-    cmd_ln_t *config;
-    const char * hyp;
-    const char * uttid;
+    ad_rec_t * ad;
     int16 adbuf[4096];
     int32 k;
-    ps_decoder_t * ps;
     uint8 utt_started, in_speech;
+    char const * hyp;
+    char const * uttid;
+    cmd_ln_t * config;
+    ps_decoder_t * ps;
 
     Data_Get_Struct(self, Transcriber, transcriber);
     ps = transcriber -> decoder;
     config = ps_get_config(ps);
-    frequency = cmd_ln_float32_r(config, "-samprate");
 
-    device = alcCaptureOpenDevice(NULL, frequency, AL_FORMAT_MONO16, frequency * 10);
-    if (device == NULL)
-        rb_raise(rb_eRuntimeError, "failed to open audio device");
-    alcCaptureStart(device);
+    if ((ad = ad_open_dev(cmd_ln_str_r(config, "-adcdev"),
+                          (int) cmd_ln_float32_r(config,
+                                                 "-samprate"))) == NULL)
+        close_and_raise(ad, rb_eRuntimeError, "failed to open audio device");
+    if (ad_start_rec(ad) < 0)
+        close_and_raise(ad, rb_eRuntimeError, "failed to start recording");
 
     if (ps_start_utt(ps, NULL) < 0)
-        close_raise(device, rb_eRuntimeError, "failed to start utterance");
+        close_and_raise(ad, rb_eRuntimeError, "failed to start utterance");
     utt_started = FALSE;
 
-    /* Indicate listening for next utterance */
     for (;;) {
-        if ((k = al_read(device, adbuf, 4096)) < 0)
-            close_raise(device, rb_eRuntimeError, "failed to read audio");
+        if ((k = ad_read(ad, adbuf, 4096)) < 0)
+            close_and_raise(ad, rb_eRuntimeError, "failed to read audio");
         rb_funcall(self, rb_intern("sleep"), 1, rb_float_new(0.1));
+
         ps_process_raw(ps, adbuf, k, FALSE, FALSE);
         in_speech = ps_get_in_speech(ps);
         if (in_speech && !utt_started) {
             utt_started = TRUE;
         }
         if (!in_speech && utt_started) {
-            //speech -> silence transition, 
-            //time to start new utterance
+            // speech -> silence transition, 
+            // time to start new utterance
             ps_end_utt(ps);
             hyp = ps_get_hyp(ps, NULL, &uttid);
 
@@ -135,12 +115,11 @@ static VALUE transcriber_transcribe(VALUE self)
             rb_yield(rb_str_new2(hyp));
 
             if (ps_start_utt(ps, NULL) < 0)
-                close_raise(device, rb_eRuntimeError, "failed to start utterance");
-            /* Indicate listening for next utterance */
+                close_and_raise(ad, rb_eRuntimeError, "failed to start utterance");
             utt_started = FALSE;
         }
     }
-    alcCaptureCloseDevice(device);
+    ad_close(ad);
 }
 
 void Init_transcriber() {
